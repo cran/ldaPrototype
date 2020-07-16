@@ -42,7 +42,9 @@ Requested chunk size for each single chunk. See \code{\link[batchtools]{chunk}}.
 Computational resources for the jobs to submit. See \code{\link[batchtools]{submitJobs}}.}
 
 \item{...}{additional arguments passed to \code{\link[lda]{lda.collapsed.gibbs.sampler}}.
-Arguments will be coerced to a vector of length \code{n}.}
+Arguments will be coerced to a vector of length \code{n}.
+Default parameters are \code{alpha = eta = 1/K} and \code{num.iterations = 200}.
+There is no default for \code{K}.}
 }
 \value{
 [\code{named list}] with entries \code{id} for the registry's folder name,
@@ -64,7 +66,7 @@ The function returns a \code{LDABatch} object. You can receive results and
 all other elements of this object with getter functions (see \code{\link{getJob}}).
 }
 \examples{
-\donttest{
+\dontrun{
 batch = LDABatch(docs = reuters_docs, vocab = reuters_vocab, n = 4, K = 15)
 batch
 getRegistry(batch)

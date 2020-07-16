@@ -29,7 +29,7 @@
 #' \code{reg} for the registry itself.
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' batch = LDABatch(docs = reuters_docs, vocab = reuters_vocab, K = 15, chunk.size = 20)
 #' batch
 #'
@@ -96,7 +96,7 @@ is.LDABatch = function(obj, verbose = FALSE){
   if (verbose) message("jobs: ", appendLF = FALSE)
   job = getJob(obj)
   if (!is.data.table(job) ||
-      !all(c(names(.getDefaultParameters()), "job.id", "seed") %in% colnames(job))){
+      !all(c(names(.getDefaultParameters(1)), "job.id", "seed") %in% colnames(job))){
     if (verbose) message("not a data.table with standard parameters")
     return(FALSE)
   }
