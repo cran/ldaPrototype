@@ -32,6 +32,12 @@
 #' @param id [\code{character(1)}]\cr
 #' A name for the computation. If not passed, it is set to "LDARep".
 #' Not considered for \code{\link{LDABatch}} or \code{\link{LDARep}} objects.
+#' @param job [\code{\link{data.frame}} or \code{named vector}]\cr
+#' A data.frame or data.table with named columns (at least)
+#' "job.id" (\code{integerish}), "K", "alpha", "eta" and "num.iterations"
+#' or a named vector with entries (at least) "K", "alpha", "eta" and "num.iterations".
+#' If not passed, it is interpreted from \code{param} of each LDA.
+#' Not considered for \code{\link{LDABatch}} or \code{\link{LDARep}} objects.
 #' @param limit.rel [0,1]\cr
 #' See \code{\link{jaccardTopics}}. Default is \code{1/500}.
 #' Not considered for calculation, if \code{sclop} is passed. But should be
@@ -74,13 +80,14 @@
 #'
 #' @return [\code{named list}] with entries
 #'  \describe{
+#'   \item{\code{id}}{[\code{character(1)}] See above.}
+#'   \item{\code{protoid}}{[\code{character(1)}] Name (ID) of the determined Prototype LDA.}
 #'   \item{\code{lda}}{List of \code{\link{LDA}} objects of the determined Prototype LDA
 #'   and - if \code{keepLDAs} is \code{TRUE} - all considered LDAs.}
-#'   \item{\code{protoid}}{[\code{character(1)}] Name (ID) of the determined Prototype LDA.}
-#'   \item{\code{id}}{[\code{character(1)}] See above.}
+#'   \item{\code{jobs}}{[\code{data.table}] with parameter specifications for the LDAs.}
 #'   \item{\code{param}}{[\code{named list}] with parameter specifications for
 #'   \code{limit.rel} [0,1], \code{limit.abs} [\code{integer(1)}] and
-#'   \code{atLeast} [\code{integer(1)}] See above for explanation.}
+#'   \code{atLeast} [\code{integer(1)}]. See above for explanation.}
 #'   \item{\code{topics}}{[\code{named matrix}] with the count of vocabularies
 #'   (row wise) in topics (column wise).}
 #'   \item{\code{sims}}{[\code{lower triangular named matrix}] with all pairwise
@@ -122,28 +129,6 @@ getPrototype.PrototypeLDA = function(x, ...){
 
 #' @rdname getPrototype
 #' @export
-getPrototype.LDABatch = function(x, vocab, limit.rel, limit.abs, atLeast,
-  progress = TRUE, pm.backend, ncpus,
-  keepTopics = FALSE, keepSims = FALSE, keepLDAs = FALSE, sclop, ...){
-
-  if (missing(limit.rel)) limit.rel = .defaultLimit.rel()
-  if (missing(limit.abs)) limit.abs = .defaultLimit.abs()
-  if (missing(atLeast)) atLeast = .defaultAtLeast()
-  if (missing(vocab)) vocab = .defaultVocab(x)
-  if (missing(pm.backend)) pm.backend = NULL
-  if (missing(ncpus)) ncpus = NULL
-  if (missing(sclop)) sclop = NULL
-  lda = getLDA(x)
-  id = getID(x)
-
-  NextMethod("getPrototype", lda = lda, vocab = vocab, id = id,
-    limit.rel = limit.rel, limit.abs = limit.abs, atLeast = atLeast,
-    progress = progress, pm.backend = pm.backend, ncpus = ncpus,
-    keepTopics = keepTopics, keepSims = keepSims, keepLDAs = keepLDAs, sclop = sclop)
-}
-
-#' @rdname getPrototype
-#' @export
 getPrototype.LDARep = function(x, vocab, limit.rel, limit.abs, atLeast,
   progress = TRUE, pm.backend, ncpus,
   keepTopics = FALSE, keepSims = FALSE, keepLDAs = FALSE, sclop, ...){
@@ -157,7 +142,8 @@ getPrototype.LDARep = function(x, vocab, limit.rel, limit.abs, atLeast,
   if (missing(sclop)) sclop = NULL
   lda = getLDA(x)
   id = getID(x)
-  NextMethod("getPrototype", lda = lda, vocab = vocab, id = id,
+  job = getJob(x)
+  NextMethod("getPrototype", lda = lda, vocab = vocab, id = id, job = job,
     limit.rel = limit.rel, limit.abs = limit.abs, atLeast = atLeast,
     progress = progress, pm.backend = pm.backend, ncpus = ncpus,
     keepTopics = keepTopics, keepSims = keepSims, keepLDAs = keepLDAs, sclop = sclop)
@@ -165,17 +151,32 @@ getPrototype.LDARep = function(x, vocab, limit.rel, limit.abs, atLeast,
 
 #' @rdname getPrototype
 #' @export
-getPrototype.default = function(lda, vocab, id, limit.rel, limit.abs, atLeast,
+getPrototype.LDABatch = getPrototype.LDARep
+
+#' @rdname getPrototype
+#' @export
+getPrototype.default = function(lda, vocab, id, job, limit.rel, limit.abs, atLeast,
   progress = TRUE, pm.backend, ncpus,
   keepTopics = FALSE, keepSims = FALSE, keepLDAs = FALSE, sclop, ...){
 
+  assert_flag(keepTopics)
+  assert_flag(keepSims)
+  assert_flag(keepLDAs)
+
+  K = NULL
   if (missing(limit.rel)) limit.rel = .defaultLimit.rel()
   if (missing(limit.abs)) limit.abs = .defaultLimit.abs()
   if (missing(atLeast)) atLeast = .defaultAtLeast()
   if (missing(vocab)) vocab = .defaultVocab(lda)
+  assert_character(vocab, any.missing = FALSE, unique = TRUE, min.len = 2)
   if (missing(pm.backend)) pm.backend = NULL
   if (missing(ncpus)) ncpus = NULL
-  if (missing(id)) id = "LDARep"
+  x = as.LDARep.default(lda = lda, job = job, id = id)
+  lda = getLDA(x)
+  id = getID(x)
+  job = getJob(x)
+  if(length(unique(job[,K])) > 1)
+    warning("Determination of a Protoype based on different number of topics (K) is not recommended!")
   if (missing(sclop) || is.null(sclop)){
     topics = mergeRepTopics(lda = lda, vocab = vocab, id = id, progress = progress)
     sims = jaccardTopics(topics = topics, limit.rel = limit.rel, limit.abs = limit.abs,
@@ -196,9 +197,16 @@ getPrototype.default = function(lda, vocab, id, limit.rel, limit.abs, atLeast,
     wordslimit = NULL
     wordsconsidered = NULL
   }
+  assert_matrix(sclop, mode = "numeric", all.missing = FALSE, nrows = ncol(sclop), ncols = length(lda), row.names = "strict")
+  # uncomment if SCLOP.pairwise fail
+  #assert_matrix(sclop, mode = "numeric", all.missing = FALSE, nrows = ncol(sclop), ncols = length(lda), row.names = "unique")
+  assert_numeric(sclop[lower.tri(sclop)], lower = 0, upper = 1, any.missing = FALSE)
+  assert_numeric(sclop[upper.tri(sclop)], lower = 0, upper = 1, any.missing = FALSE)
+  assert_true(all(colnames(sclop) == row.names(sclop)))
+
   protoid = as.integer(names(lda)[which.max(colSums(sclop, na.rm = TRUE))])
-  if (!keepLDAs) lda = lda[which.max(colSums(sclop, na.rm = TRUE))]
-  res = list(lda = lda, protoid = protoid, id = id,
+  if (!keepLDAs) lda = lda[match(protoid, names(lda))]
+  res = list(id = id, protoid = protoid, lda = lda, jobs = job,
     param = list(limit.rel = limit.rel, limit.abs = limit.abs, atLeast = atLeast),
     topics = topics, sims = sims, wordslimit = wordslimit,
     wordsconsidered = wordsconsidered, sclop = sclop)

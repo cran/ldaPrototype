@@ -56,6 +56,8 @@ as.LDARep = function(...) UseMethod("as.LDARep")
 #' @export
 as.LDARep.default = function(lda, job, id, ...){
 
+  assert_list(lda, types = "LDA", any.missing = FALSE, min.len = 1)
+
   if (missing(id)) id = "LDARep"
   if (is.null(names(lda))){
     if (missing(job) || is.vector(job)){
@@ -65,6 +67,7 @@ as.LDARep.default = function(lda, job, id, ...){
       names(lda) = job$job.id
     }
   }
+  assert_integerish(suppressWarnings(as.numeric(names(lda))), any.missing = FALSE)
   if (missing(job)){
     job = rbindlist(lapply(lda, function(x)
       as.data.table(data.frame((getParam(x))))), fill = TRUE)
@@ -119,6 +122,7 @@ as.LDARep.LDABatch = as.LDARep.LDARep
 #' @rdname as.LDARep
 #' @export
 is.LDARep = function(obj, verbose = FALSE){
+  assert_flag(verbose)
 
   if (!inherits(obj, "LDARep")){
     if (verbose) message("object is not of class \"LDARep\"")
@@ -132,16 +136,29 @@ is.LDARep = function(obj, verbose = FALSE){
 
   testNames = c("id", "jobs", "lda")
 
-  if (length(setdiff(names(obj), testNames)) != 0  ||
-      length(intersect(names(obj), testNames)) != 3){
+  #if (length(setdiff(names(obj), testNames)) != 0  ||
+  #    length(intersect(names(obj), testNames)) != 3){
+  if (!test_list(obj, types = c("character", "list", "data.table"), names = "named", any.missing = FALSE) ||
+      !test_set_equal(names(obj), testNames)){
     if (verbose) message("object does not contain exactly the list elements of a \"LDARep\" object")
     return(FALSE)
   }
 
+  if (verbose) message("id: ", appendLF = FALSE)
+  id = getID(obj)
+  if (!is.character(id) || !(length(id) == 1)){
+    if (verbose) message("not a character of length 1")
+    return(FALSE)
+  }
+  if (verbose) message("checked")
+
   if (verbose) message("lda: ", appendLF = FALSE)
-  lda = getLDA(obj, reduce = FALSE)
-  if(!is.list(lda)){
-    if (verbose) message("not a list")
+  lda = try(getLDA(obj, reduce = FALSE), silent = verbose)
+  if(inherits(lda, "try-error")){
+    return(FALSE)
+  }
+  if(!is.list(lda) || length(lda) < 1){
+    if (verbose) message("not a (non-empty) list of \"LDA\" objects")
     return(FALSE)
   }
   if(!all(sapply(lda, is.LDA))){
@@ -162,7 +179,7 @@ is.LDARep = function(obj, verbose = FALSE){
     return(FALSE)
   }
   if (!is.integer(job$job.id)){
-    if (verbose) message("\"job.id\" is not integerish")
+    if (verbose) message("\"job.id\" is not an integer")
     return(FALSE)
   }
   #if (!all(union(job$job.id, names(lda)) %in% intersect(job$job.id, names(lda))) ||
@@ -170,14 +187,6 @@ is.LDARep = function(obj, verbose = FALSE){
   #  if (verbose) message("names of LDAs and \"job.id\" do not fit together")
   #  return(FALSE)
   #}
-  if (verbose) message("checked")
-
-  if (verbose) message("id: ", appendLF = FALSE)
-  id = getID(obj)
-  if (!is.character(id) || !(length(id) == 1)){
-    if (verbose) message("not a character of length 1")
-    return(FALSE)
-  }
   if (verbose) message("checked")
 
   return(TRUE)

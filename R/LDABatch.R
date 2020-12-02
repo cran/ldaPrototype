@@ -20,6 +20,7 @@
 #' Documents as received from \code{\link[tosca]{LDAprep}}.
 #' @param vocab [\code{character}]\cr
 #' Vocabularies passed to \code{\link[lda]{lda.collapsed.gibbs.sampler}}.
+#' For additional (and necessary) arguments passed, see ellipsis (three-dot argument).
 #' @param n [\code{integer(1)}]\cr
 #' Number of Replications.
 #' @param seeds [\code{integer(n)}]\cr
@@ -58,13 +59,14 @@
 
 LDABatch = function(docs, vocab, n = 100, seeds, id = "LDABatch", load = FALSE, chunk.size = 1, resources, ...){
 
-  stopifnot(is.character(id), length(id) == 1,
-    is.list(docs), all(sapply(docs, is.matrix)), all(sapply(docs, nrow) == 2),
-    all(sapply(docs, function(x) all(x[2,] == 1))),
-    is.character(vocab),
-    is.numeric(n), length(n) == 1, as.integer(n) == n,
-    is.logical(load), length(load) == 1,
-    is.numeric(chunk.size), as.integer(chunk.size) == chunk.size)
+  assert_string(id, min.chars = 1)
+  assert_list(docs, min.len = 1, names = "unique", types = "matrix", any.missing = FALSE)
+  stopifnot(all(sapply(docs, nrow) == 2),
+            all(sapply(docs, function(x) all(x[2,] == 1))))
+  assert_character(vocab, any.missing = FALSE, unique = TRUE, min.len = 2)
+  assert_int(n, lower = 1)
+  assert_flag(load)
+  assert_int(chunk.size, lower = 1)
 
   fd = file.path(id)
   if (dir.exists(fd)){
@@ -91,7 +93,7 @@ LDABatch = function(docs, vocab, n = 100, seeds, id = "LDABatch", load = FALSE, 
   moreArgs = data.table(do.call(cbind, .paramList(n = n, ...)))
 
   if (missing(seeds) || length(seeds) != n){
-    message("No seeds given or length of given seeds differs from number of replications: sample seeds")
+    message("No seeds given or length of given seeds differs from number of replications: sample seeds. Sampled seeds can be obtained via getJob().")
     if (!exists(".Random.seed", envir = globalenv())){
       runif(1)
     }

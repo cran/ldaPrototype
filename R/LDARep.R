@@ -18,6 +18,7 @@
 #' Documents as received from \code{\link[tosca]{LDAprep}}.
 #' @param vocab [\code{character}]\cr
 #' Vocabularies passed to \code{\link[lda]{lda.collapsed.gibbs.sampler}}.
+#' For additional (and necessary) arguments passed, see ellipsis (three-dot argument).
 #' @param n [\code{integer(1)}]\cr
 #' Number of Replications.
 #' @param seeds [\code{integer(n)}]\cr
@@ -56,9 +57,16 @@
 
 LDARep = function(docs, vocab, n = 100, seeds, id = "LDARep", pm.backend, ncpus, ...){
 
+  assert_string(id, min.chars = 1)
+  assert_list(docs, min.len = 1, names = "unique", types = "matrix", any.missing = FALSE)
+  stopifnot(all(sapply(docs, nrow) == 2),
+            all(sapply(docs, function(x) all(x[2,] == 1))))
+  assert_character(vocab, any.missing = FALSE, unique = TRUE, min.len = 2)
+  assert_int(n, lower = 1)
+
   args = .paramList(n = n, ...)
   if (missing(seeds) || length(seeds) != n){
-    message("No seeds given or length of given seeds differs from number of replications: sample seeds")
+    message("No seeds given or length of given seeds differs from number of replications: sample seeds. Sampled seeds can be obtained via getJob().")
     if (!exists(".Random.seed", envir = globalenv())){
       runif(1)
     }
@@ -78,6 +86,8 @@ LDARep = function(docs, vocab, n = 100, seeds, id = "LDARep", pm.backend, ncpus,
 
   if (!missing(pm.backend) && !is.null(pm.backend)){
     if (missing(ncpus) || is.null(ncpus)) ncpus = future::availableCores()
+    assert_choice(pm.backend, choices = c("multicore", "socket", "mpi"))
+    assert_int(ncpus, lower = 1)
     parallelMap::parallelStart(mode = pm.backend, cpus = ncpus)
   }
 

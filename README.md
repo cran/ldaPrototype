@@ -1,5 +1,5 @@
 # ldaPrototype
-[![status](https://joss.theoj.org/papers/ecce89f69453dc2ee0c697fbcb776de8/status.svg)](https://joss.theoj.org/papers/ecce89f69453dc2ee0c697fbcb776de8)
+[![status](https://joss.theoj.org/papers/ecce89f69453dc2ee0c697fbcb776de8/status.svg)](https://joss.theoj.org/papers/10.21105/joss.02181)
 [![Build Status](https://travis-ci.org/JonasRieger/ldaPrototype.svg?branch=master)](https://travis-ci.org/JonasRieger/ldaPrototype) 
 [![CRAN](https://www.r-pkg.org/badges/version/ldaPrototype)](https://cran.r-project.org/package=ldaPrototype)
 [![Coverage Status](https://coveralls.io/repos/github/JonasRieger/ldaPrototype/badge.svg?branch=master)](https://coveralls.io/github/JonasRieger/ldaPrototype?branch=master)
@@ -7,6 +7,23 @@
 
 ## Prototype of Multiple Latent Dirichlet Allocation Runs
 Determine a Prototype from a number of runs of Latent Dirichlet Allocation (LDA) measuring its similarities with S-CLOP: A procedure to select the LDA run with highest mean pairwise similarity, which is measured by S-CLOP (Similarity of multiple sets by Clustering with Local Pruning), to all other runs. LDA runs are specified by its assignments leading to estimators for distribution parameters. Repeated runs lead to different results, which we encounter by choosing the most representative LDA run as prototype.
+
+## Citation
+Please cite the [JOSS](https://doi.org/10.21105/joss.02181) paper using the BibTeX entry
+```
+@article{<placeholder>,
+    title = {{ldaPrototype}: A method in {R} to get a Prototype of multiple Latent Dirichlet Allocations},
+    author = {Jonas Rieger},
+    journal = {Journal of Open Source Software},
+    year = {2020},
+    volume = {5},
+    number = {51},
+    pages = {2181},
+    doi = {10.21105/joss.02181},
+    url = {https://doi.org/10.21105/joss.02181}
+  }
+```
+which is also obtained by the call ``citation("ldaPrototype")``.
 
 ## References
 * Rieger, J. (2020). ldaPrototype: A method in R to get a Prototype of multiple Latent Dirichlet Allocations. [Journal of Open Source Software](https://doi.org/10.21105/joss.02181), 5(51), 2181.
@@ -18,7 +35,7 @@ Determine a Prototype from a number of runs of Latent Dirichlet Allocation (LDA)
 * [lda](https://CRAN.R-project.org/package=lda) offers a fast implementation of the Latent Dirichlet Allocation and is used by ``ldaPrototype``.
 * [quanteda](https://quanteda.io/) is a framework for "Quantitative Analysis of Textual Data".
 * [stm](https://www.structuraltopicmodel.com/) is a framework for Structural Topic Models.
-* [tosca](https://CRAN.R-project.org/package=tosca) is a framework for statistical methods in content analysis including visualizations and validation techniques. It is also useful for managing and manipulating text data to a structure requested by ``ldaPrototype``.
+* [tosca](https://github.com/Docma-TU/tosca) is a framework for statistical methods in content analysis including visualizations and validation techniques. It is also useful for managing and manipulating text data to a structure requested by ``ldaPrototype``.
 * [topicmodels](https://CRAN.R-project.org/package=topicmodels) is another framework for various topic models based on the Latent Dirichlet Allocation and Correlated Topics Models.
 * [mallet](https://github.com/mimno/RMallet) provides an interface for the Java based machine learning tool [MALLET](http://mallet.cs.umass.edu/).
 
@@ -61,6 +78,8 @@ proto2 = getPrototype(res2) #= getLDA(res2)
 
 identical(res, res2)
 ```
+There is also the option to use similarity measures other than the Jaccard coefficient. Currently, the measures cosine similarity (``cosineTopics``), Jensen-Shannon divergence (``jsTopics``) and rank-biased overlap (``rboTopics``) are implemented in addition to the standard Jaccard coefficient (``jaccardTopics``).
+
 To get an overview of the workflow, the associated functions and getters for each type of object, the following call is helpful:
 ```{R}
 ?`ldaPrototype-package`
@@ -108,7 +127,7 @@ The topic matrices of all replications are merged and reduced to the vocabulary 
 topics = mergeTopics(reps, vocab = reuters_vocab)
 ```
 #### Step 3: Topic Similarities
-We use the merged topic matrix to calculate pairwise topic similarites using the Jaccard coefficient with parameters adjusting the consideration of words. A word is taken as relevant for a topic if its count passes thresholds given by ``limit.rel`` and ``limit.abs``. A word is considered for calculation of similarities if it's relevant for the topic or if it belongs to the (``atLeast =``) 3 most common words in the corresponding topic.
+We use the merged topic matrix to calculate pairwise topic similarites using the Jaccard coefficient with parameters adjusting the consideration of words. A word is taken as relevant for a topic if its count passes thresholds given by ``limit.rel`` and ``limit.abs``. A word is considered for calculation of similarities if it's relevant for the topic or if it belongs to the (``atLeast =``) 3 most common words in the corresponding topic. Alternatively, the similarities can also be calculated considering the cosine similarity (``cosineTopics``), Jensen-Shannon divergence (``jsTopics`` - parameter ``epsilon`` to ensure computability) or rank-biased overlap (``rboTopics`` - parameter ``k`` for maximum depth of evaluation and ``p`` as weighting parameter).
 ```{R}
 jacc = jaccardTopics(topics, limit.rel = 1/500, limit.abs = 10, atLeast = 3)
 getSimilarity(jacc)[1:3, 1:3]

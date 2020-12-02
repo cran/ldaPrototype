@@ -28,7 +28,8 @@ LDAPrototype(
 Documents as received from \code{\link[tosca]{LDAprep}}.}
 
 \item{vocabLDA}{[\code{character}]\cr
-Vocabularies passed to \code{\link[lda]{lda.collapsed.gibbs.sampler}}.}
+Vocabularies passed to \code{\link[lda]{lda.collapsed.gibbs.sampler}}.
+For additional (and necessary) arguments passed, see ellipsis (three-dot argument).}
 
 \item{vocabMerge}{[\code{character}]\cr
 Vocabularies taken into consideration for merging topic matrices.}
@@ -83,13 +84,14 @@ There is no default for \code{K}.}
 \value{
 [\code{named list}] with entries
  \describe{
+  \item{\code{id}}{[\code{character(1)}] See above.}
+  \item{\code{protoid}}{[\code{character(1)}] Name (ID) of the determined Prototype LDA.}
   \item{\code{lda}}{List of \code{\link{LDA}} objects of the determined Prototype LDA
   and - if \code{keepLDAs} is \code{TRUE} - all considered LDAs.}
-  \item{\code{protoid}}{[\code{character(1)}] Name (ID) of the determined Prototype LDA.}
-  \item{\code{id}}{[\code{character(1)}] See above.}
+  \item{\code{jobs}}{[\code{data.table}] with parameter specifications for the LDAs.}
   \item{\code{param}}{[\code{named list}] with parameter specifications for
   \code{limit.rel} [0,1], \code{limit.abs} [\code{integer(1)}] and
-  \code{atLeast} [\code{integer(1)}] See above for explanation.}
+  \code{atLeast} [\code{integer(1)}]. See above for explanation.}
   \item{\code{topics}}{[\code{named matrix}] with the count of vocabularies
   (row wise) in topics (column wise).}
   \item{\code{sims}}{[\code{lower triangular named matrix}] with all pairwise
@@ -104,7 +106,7 @@ There is no default for \code{K}.}
 }
 }
 \description{
-Performs multiple runs of LDA and returns the Prototype LDA of
+Performs multiple runs of LDA and computes the Prototype LDA of
 this set of LDAs.
 }
 \details{

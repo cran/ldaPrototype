@@ -8,7 +8,8 @@
 #' distribution parameters. Repeated runs lead to different results, which we
 #' encounter by choosing the most representative LDA run as prototype.\cr
 #' For bug reports and feature requests please use the issue tracker:
-#' \url{https://github.com/JonasRieger/ldaPrototype/issues}.
+#' \url{https://github.com/JonasRieger/ldaPrototype/issues}. Also have a look at
+#' the (detailed) example at \url{https://github.com/JonasRieger/ldaPrototype}.
 #'
 #' @section Data:
 #' \code{\link{reuters}} Example Dataset (91 articles from Reuters) for testing.
@@ -31,10 +32,16 @@
 #'
 #' @section Calculation Steps (Workflow) to determine the Prototype LDA:
 #' \code{\link{mergeTopics}} Merge topic matrices from multiple LDAs.\cr
-#' \code{\link{jaccardTopics}} Calculate topic similarities.\cr
+#' \code{\link{jaccardTopics}} Calculate topic similarities using the Jaccard coefficient (see Similarity Measures for other possible measures).\cr
 #' \code{\link{dendTopics}} Create a dendrogram from topic similarities.\cr
 #' \code{\link{SCLOP}} Determine various S-CLOP values.\cr
 #' \code{\link{pruneSCLOP}} Prune \code{\link[=dendTopics]{TopicDendrogram}} objects.
+#'
+#' @section Similarity Measures:
+#' \code{\link{cosineTopics}} Cosine Similarity.\cr
+#' \code{\link{jaccardTopics}} Jaccard Coefficient.\cr
+#' \code{\link{jsTopics}} Jensen-Shannon Divergence.\cr
+#' \code{\link{rboTopics}} rank-biased overlap.
 #'
 #' @section Shortcuts:
 #' \code{\link{getPrototype}} Shortcut which includes all calculation steps.\cr
@@ -42,17 +49,17 @@
 #' determines their Prototype.
 #'
 #' @references
-#' Rieger, Jonas (2020). ldaPrototype: A method in R to get a Prototype of multiple Latent
-#' Dirichlet Allocations. Journal of Open Source Software, \bold{5}(51), 2181,
+#' Rieger, Jonas (2020). "ldaPrototype: A method in R to get a Prototype of multiple Latent
+#' Dirichlet Allocations". Journal of Open Source Software, \bold{5}(51), 2181,
 #' DOI 10.21105/joss.02181, URL \url{https://doi.org/10.21105/joss.02181}.
 #'
 #' Rieger, Jonas, Jörg Rahnenführer and Carsten Jentsch (2020).
-#' "Improving Latent Dirichlet Allocation: On Reliability of the Novel Method LDAPrototype."
+#' "Improving Latent Dirichlet Allocation: On Reliability of the Novel Method LDAPrototype".
 #' In: \emph{Natural Language Processing and Information Systems, NLDB 2020.} LNCS 12089, pp. 118--125,
 #' DOI 10.1007/978-3-030-51310-8_11, URL \url{https://doi.org/10.1007/978-3-030-51310-8_11}.
 #'
 #' Rieger, Jonas, Lars Koppers, Carsten Jentsch and Jörg Rahnenführer (2020).
-#' "Improving Reliability of Latent Dirichlet Allocation by Assessing Its Stability using Clustering Techniques on Replicated Runs."
+#' "Improving Reliability of Latent Dirichlet Allocation by Assessing Its Stability using Clustering Techniques on Replicated Runs".
 #' arXiv 2003.04980, URL \url{https://arxiv.org/abs/2003.04980}.
 #'
 #'
